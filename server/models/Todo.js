@@ -1,33 +1,30 @@
-const Sequelize = require('sequelize')
-const sequelize = require('../database/config')
-
-const Todo = sequelize.define('todos',
-  {
+module.exports = (sequelize, DataTypes) => {
+  const Todo = sequelize.define('todos', {
     id: {
-      type: Sequelize.INTEGER(11),
+      type: DataTypes.INTEGER(11),
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
     },
-    title: Sequelize.STRING(100),
-    description: Sequelize.STRING(300),
+    title: DataTypes.STRING(100),
+    description: DataTypes.STRING(300),
     createdBy: {
-      type: Sequelize.INTEGER(11),
+      type: DataTypes.INTEGER(11),
       references: {
         model: 'users',
         key: 'id',
         as: 'createdBy',
       },
     },
-    createdAt: Sequelize.DATE,
-    updatedAt: Sequelize.DATE,
-});
-
-Todo.associate = (models) => {
-  Todo.belongsTo(models.User, {
-    as: 'users',
-    foreignKey: 'userId',
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
   });
-};
 
-module.exports = Todo
+  Todo.associate = models => {
+    Todo.belongsTo(models.User, {
+      as: 'users',
+      foreignKey: 'createdBy',
+    });
+  }
+  return Todo
+}

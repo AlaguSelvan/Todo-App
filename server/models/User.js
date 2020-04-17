@@ -1,35 +1,35 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../database/config')
 
-const User = sequelize.define(
-  'users',
-  {
-    id: {
-      type: Sequelize.INTEGER(11),
-      allowNull: false,
-      autoIncrement: true,
-      primaryKey: true,
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define(
+    'users',
+    {
+      id: {
+        type: DataTypes.INTEGER(11),
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      username: {
+        type: DataTypes.STRING(35),
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: DataTypes.STRING(35),
+        allowNull: false,
+      },
     },
-    username: {
-      type: Sequelize.STRING(35),
-      allowNull: false,
-      unique: true,
-    },
-    password: {
-      type: Sequelize.STRING(35),
-      allowNull: false,
-    },
-  },
-  {
-    timestamps: false,
-  }
-);
+    {
+      timestamps: false,
+    }
+  );
+  User.associate = function(models) {
+    User.hasMany(models.Todo, {
+      onDelete: 'cascade'
+    });
+  };
+  return User
+}
 
-User.associate = (models) => {
-  User.hasMany(models.Todo, {
-    as: 'todos',
-    foreignKey: 'userId',
-  });
-};
-
-module.exports = User;

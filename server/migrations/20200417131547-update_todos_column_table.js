@@ -7,5 +7,6 @@ module.exports = {
 
   down: (queryInterface, Sequelize) => {
     return queryInterface.renameColumn('todos', 'createdBy', 'userId');
+    // return Promise.resolve();
   },
 };

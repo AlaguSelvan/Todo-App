@@ -1,21 +1,57 @@
-const User = require('../models/User')
+const jwt = require('jsonwebtoken');
+import Models from '../models'
 
+const { User } = Models
 
-const Login = async(req, res) => {
+export const Login = async(req, res) => {
   const { name, password } = req.body;
   if(!password || !name) {
     return res.status(422).send({ errors: [{ title: 'Data missing', detail: 'Provide name and password' }]})
   }
-  const existingUser = await User.findAll({
-    username: name
-  })
-  if(existingUser) {
-    return res.status(200).send({ loggedIn: true })
+  const data = await User.findAll({
+    attributes: ['id', 'username'],
+    where: {
+      username: name,
+    },
+  }).map((el) => el.get({ plain: true }));
+  // return res.send(data);
+  // return User.findAll({
+  //   attributes: ['id', 'username'],
+  //   where: {
+  //     username: name
+  //   }
+  // }).then(d => res.send(d))
+  if (data.length > 0) {
+    const payload = {
+      id: data[0].id
+    }
+    console.log(payload);
+    jwt.sign(
+      payload,
+      process.env.SECRET,
+      {
+        expiresIn: 3600,
+      },
+      (err, token) => {
+        if (err) {
+          return res.status(422).send({
+            errors: [
+              { title: 'Auth Error', detail: 'Please login later' },
+            ]
+          })
+        }
+        return res.send({
+          success: true,
+          token: 'Bearer ' + token,
+        });
+      }
+    );
+  } else {
+    return res.status(400).send({errors: [{ title: 'Not Found', detail: 'User not Found'}]})
   }
-  return res.status(400).send({errors: [{ title: 'User not Found', detail: 'User not registered'}]})
 }
 
-const Register = async() => {
+export const Register = async(req, res) => {
   const { name, password } = req.body;
   if (!password || !name) {
     return res
@@ -27,9 +63,11 @@ const Register = async() => {
       });
   }
   const existingUser = await User.findAll({
-    username: name,
+    where: {
+      username: name,
+    }
   });
-    if (existingUser) {
+    if (existingUser.length > 0) {
     return res
       .status(422)
       .send({
@@ -39,21 +77,14 @@ const Register = async() => {
       });
     }
   try {
-    const user = await User.create({
-      username: 'alex',
-      password: '123456',
+    await User.create({
+      username: name,
+      password: password,
     });
-    if(user) {
       return res.json({ registered: true });
-    }
   } catch (error) {
     return res.status(400).send({
       errors: [{ title: 'error occured', detail: 'Please Check inputs' }],
     });
   }
-}
-
-module.exports = {
-  Login,
-  Register
 }
